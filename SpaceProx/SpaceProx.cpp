@@ -842,7 +842,7 @@ void UpdateWindowTitle(HWND window, float& titleTimer)
     const std::wstring status = gPlayer->IsInvincible() ? L" | VTABLE OVERRIDE ACTIVE" : L" | WASD/Arrows move, Mouse+Space fire, P pause";
     const std::wstring wasted = gIsWasted ? L" | WASTED" : L"";
     const std::wstring paused = gIsPaused ? L" | PAUSED" : L"";
-    const std::wstring title = std::wstring(L"SpaceProx — D3D11 Arena | HP ") + std::to_wstring(gPlayer->GetHealth()) +
+    const std::wstring title = std::wstring(L"SpaceProx â€” D3D11 Arena | HP ") + std::to_wstring(gPlayer->GetHealth()) +
         L" | Ammo " + std::to_wstring(gPlayer->GetAmmo()) + L" | Score " + std::to_wstring(gPlayer->GetScore()) +
         L" | Best " + std::to_wstring(gBestScore) + wasted + paused + status;
     SetWindowTextW(window, title.c_str());

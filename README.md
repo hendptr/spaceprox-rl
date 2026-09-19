@@ -1,38 +1,38 @@
 # SpaceProx Black-Box RL
 
-This folder contains the standalone SpaceProx game and the final black-box PPO
-controller used in the accompanying article.
+SpaceProx is a small Direct3D 11 arena game used as a black-box reinforcement
+learning testbed. The game and RL controller are separate Windows processes.
 
-The RL code does not read game memory, inject a DLL, or call an internal game API.
-It captures the rendered client area, extracts visual features, and controls the game
-with ordinary Windows keyboard and mouse input.
+The RL code does not read process memory, inject a DLL, or call an internal game API.
+It captures the rendered game window, extracts visual features, and sends ordinary
+keyboard and mouse input.
 
-## Folder layout
+## Project layout
 
 ```text
 SpaceProxPackage/
-├── Game/
-│   ├── SpaceProx.exe
-│   ├── SimpleGame7.cpp
-│   ├── Player.h
-│   ├── PlayerFactory.cpp
-│   └── SpaceProx.vcxproj
-├── RL/
-│   ├── game_interface.py
-│   ├── final_env.py
-│   ├── final_model.py
-│   ├── instrumented_ppo.py
-│   ├── train_final.py
-│   ├── play_final.py
-│   ├── probe_final.py
-│   ├── evaluate_final.py
-│   └── requirements.txt
-├── models/
-│   └── spaceprox_best.zip
-├── install.bat
-├── run_best.bat
-├── train_5min.bat
-└── train_30min.bat
+|-- SpaceProx/
+|   |-- SpaceProx.exe
+|   |-- SpaceProx.cpp
+|   |-- Player.h
+|   |-- PlayerFactory.cpp
+|   `-- SpaceProx.vcxproj
+|-- RL/
+|   |-- game_interface.py
+|   |-- final_env.py
+|   |-- final_model.py
+|   |-- instrumented_ppo.py
+|   |-- train_final.py
+|   |-- play_final.py
+|   |-- probe_final.py
+|   |-- evaluate_final.py
+|   `-- requirements.txt
+|-- models/
+|   `-- spaceprox_best.zip
+|-- install.bat
+|-- run_best.bat
+|-- train_5min.bat
+`-- train_30min.bat
 ```
 
 ## Requirements
@@ -44,22 +44,16 @@ SpaceProxPackage/
 
 ## Quick start
 
-### 1. Install Python dependencies
+### Install Python dependencies
 
-Double-click:
-
-```text
-install.bat
-```
-
-or run:
+Double-click `install.bat`, or run:
 
 ```bat
 cd RL
 python -m pip install -r requirements.txt
 ```
 
-### 2. Play with the supplied trained model
+### Play the supplied model
 
 Double-click:
 
@@ -67,28 +61,30 @@ Double-click:
 run_best.bat
 ```
 
-You do not need to start the game manually. The Python environment launches
-`Game\SpaceProx.exe` automatically if it is not already open.
+The Python environment launches `SpaceProx\SpaceProx.exe` automatically when the
+game is not already open.
 
-The learned PPO policy chooses movement only. A deterministic visual controller
-handles enemy detection, target tracking, mouse aim, and firing.
+The PPO policy learns movement only. A deterministic visual controller handles enemy
+detection, target tracking, mouse aim, and firing.
 
-### 3. Train a new model
+Only run one controller/game pair at a time because keyboard state and cursor position
+are global Windows input. Press `Ctrl+C` in the Python terminal to stop playback.
 
-For a quick five-minute experiment:
+### Train a new model
+
+For a five-minute experiment:
 
 ```text
 train_5min.bat
 ```
 
-For a longer thirty-minute experiment:
+For a thirty-minute experiment:
 
 ```text
 train_30min.bat
 ```
 
-Each training run uses a unique output directory under `RL\checkpoints\final` and
-`RL\logs\final`.
+Each training run writes to its own checkpoint and log directories under `RL`.
 
 ## Evaluate a checkpoint
 
@@ -98,32 +94,30 @@ From the `RL` directory:
 python probe_final.py --model ..\models\spaceprox_best.zip --steps 1000
 ```
 
-For full episode evaluation:
+For multi-episode evaluation:
 
 ```bat
 python evaluate_final.py --model ..\models\spaceprox_best.zip --episodes 10
 ```
 
-The behavior probe reports movement diversity, entropy, arena coverage, blocked
-movement, stagnation, corner occupancy, score, and HP.
+The behavior probe reports movement diversity, policy entropy, arena coverage,
+blocked movement, stagnation, corner occupancy, score, and HP.
 
 ## Build SpaceProx from source
 
-The package already includes a compiled `Game\SpaceProx.exe`, so rebuilding is
-optional.
+The repository already includes `SpaceProx\SpaceProx.exe`, so rebuilding is optional.
 
 Example with Visual Studio 2022 Professional:
 
 ```powershell
 & "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\amd64\MSBuild.exe" `
-  .\Game\SpaceProx.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64
+  .\SpaceProx\SpaceProx.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64
 ```
 
-If your Visual Studio edition is Community or Enterprise, adjust the MSBuild path.
-The rebuilt executable is written to `Game\bin\x64\Release\SpaceProx.exe`. Copy it
-to `Game\SpaceProx.exe` if you want the Python launcher to use the rebuilt binary.
+The rebuilt executable is written to `SpaceProx\bin\x64\Release\SpaceProx.exe`.
+Copy it to `SpaceProx\SpaceProx.exe` if you want the Python launcher to use it.
 
-## Controls
+## Game controls
 
 | Input | Action |
 |---|---|
@@ -136,9 +130,9 @@ to `Game\SpaceProx.exe` if you want the Python launcher to use the rebuilt binar
 
 ## What the model learns
 
-The PPO network receives a 76-dimensional observation made from rendered-image
-measurements, short movement history, and the previous movement action. It outputs
-one of nine movement commands:
+The PPO network receives a 76-dimensional observation built from rendered-image
+measurements, short movement history, and the previous movement action. It selects one
+of nine movement commands:
 
 ```text
 idle, W, S, A, D, W+A, W+D, S+A, S+D

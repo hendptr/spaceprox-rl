@@ -40,7 +40,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SimpleGame7.cpp" />
+    <ClCompile Include="SpaceProx.cpp" />
     <ClCompile Include="PlayerFactory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
