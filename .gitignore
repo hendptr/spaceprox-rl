@@ -1,9 +1,9 @@
-﻿__pycache__/
+__pycache__/
 *.py[cod]
 logs/
 checkpoints/
 *.monitor.csv
 tensorboard/
 
-Game/bin/
-Game/obj/
+SpaceProx/bin/
+SpaceProx/obj/
