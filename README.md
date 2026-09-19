@@ -120,6 +120,8 @@ Example with Visual Studio 2022 Professional:
 ```
 
 If your Visual Studio edition is Community or Enterprise, adjust the MSBuild path.
+The rebuilt executable is written to `Game\bin\x64\Release\SpaceProx.exe`. Copy it
+to `Game\SpaceProx.exe` if you want the Python launcher to use the rebuilt binary.
 
 ## Controls
 
@@ -143,4 +145,3 @@ idle, W, S, A, D, W+A, W+D, S+A, S+D
 ```
 
 The game remains a separate Windows process throughout training and playback.
-
