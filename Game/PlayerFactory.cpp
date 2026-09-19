@@ -1,10 +1,10 @@
 #include "Player.h"
 
-namespace SimpleGame7
+namespace SpaceProx
 {
 __declspec(noinline) Player* CreatePlayer()
 {
     static Player player;
     return &player;
 }
-} // namespace SimpleGame7
+} // namespace SpaceProx

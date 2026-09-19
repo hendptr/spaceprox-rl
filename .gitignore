@@ -4,3 +4,6 @@ logs/
 checkpoints/
 *.monitor.csv
 tensorboard/
+
+Game/bin/
+Game/obj/

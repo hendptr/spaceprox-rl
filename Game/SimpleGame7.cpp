@@ -1,11 +1,5 @@
-// SimpleGame7.cpp
-//
-// A small D3D11 top-down arena game, identical to SimpleGame6 EXCEPT that the
-// Player has an extra NON-VIRTUAL method: GetDamageTaken(int). Because it is
-// non-virtual it has NO vtable slot, so GameHook7 must INLINE/DETOUR-hook it.
-//
-// The game is otherwise the same as SimpleGame6 (no magic number, same Player
-// vtable, same D3D11 renderer).
+// SpaceProx.cpp
+// Small standalone D3D11 top-down arena game used by the black-box RL experiment.
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -29,7 +23,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-namespace SimpleGame7
+namespace SpaceProx
 {
 constexpr wchar_t kWindowClass[] = L"SpaceProxWindowClass";
 constexpr wchar_t kWindowTitle[] = L"SpaceProx - D3D11 Arena";
@@ -89,7 +83,6 @@ int gBestScore = 0;
 
 Player::Player() : health(100), score(0), ammo(24), x(480.0f), y(520.0f), aimX(0.0f), aimY(-1.0f),
     hitFlash(0.0f), fireCooldown(0.0f), reloadTime(0.0f) {}
-// calls, not direct calls on a concrete stack object.
 Player* gPlayer = CreatePlayer();
 
 bool PointInRect(float x, float y, const Rect& r)
@@ -99,8 +92,7 @@ bool PointInRect(float x, float y, const Rect& r)
 
 bool SegmentIntersectsRect(float x0, float y0, float x1, float y1, const Rect& r)
 {
-    // Liang-Barsky line clipping.  It gives the player a real line-of-sight
-    // check: an enemy behind a wall is hidden until the vtable hook overrides it.
+    // Liang-Barsky line clipping for the game's line-of-sight check.
     const float dx = x1 - x0;
     const float dy = y1 - y0;
     const float p[4] = { -dx, dx, -dy, dy };
@@ -191,8 +183,6 @@ void Player::Update(float deltaSeconds)
 void Player::TakeDamage(int amount)
 {
     if (health <= 0) return;
-    // Use GetDamageTaken to allow damage reduction.
-    // GetDamageTaken is NON-VIRTUAL, so GameHook7 inline/Detour-hooks it.
     int actualDamage = GetDamageTaken(amount);
     health = std::max(0, health - actualDamage);
     hitFlash = 1.0f;
@@ -219,9 +209,7 @@ bool Player::ConsumeAmmo()
     return true;
 }
 
-// NON-VIRTUAL method (no vtable slot). GameHook7 INLINE/DETOUR-hooks this.
-// The body is longer than 5 bytes so the 5-byte jmp + trampoline works.
-__declspec(noinline) int Player::GetDamageTaken(int amount)
+int Player::GetDamageTaken(int amount)
 {
     int result = amount;
     if (result < 0) result = 0;       // clamp negatives
@@ -308,7 +296,7 @@ bool CreateD3D(HWND window)
         "main", "vs_4_0", 0, 0, &vertexBlob, &errorBlob);
     if (FAILED(vertexResult))
     {
-        if (errorBlob) { MessageBoxA(window, static_cast<const char*>(errorBlob->GetBufferPointer()), "SimpleGame7 vertex shader", MB_ICONERROR); errorBlob->Release(); }
+        if (errorBlob) { MessageBoxA(window, static_cast<const char*>(errorBlob->GetBufferPointer()), "SpaceProx vertex shader", MB_ICONERROR); errorBlob->Release(); }
         return false;
     }
     if (errorBlob) { errorBlob->Release(); errorBlob = nullptr; }
@@ -316,7 +304,7 @@ bool CreateD3D(HWND window)
         "main", "ps_4_0", 0, 0, &pixelBlob, &errorBlob);
     if (FAILED(pixelResult))
     {
-        if (errorBlob) { MessageBoxA(window, static_cast<const char*>(errorBlob->GetBufferPointer()), "SimpleGame7 pixel shader", MB_ICONERROR); errorBlob->Release(); }
+        if (errorBlob) { MessageBoxA(window, static_cast<const char*>(errorBlob->GetBufferPointer()), "SpaceProx pixel shader", MB_ICONERROR); errorBlob->Release(); }
         vertexBlob->Release();
         return false;
     }
@@ -869,9 +857,9 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARA
     }
     return DefWindowProcW(window, message, wParam, lParam);
 }
-} // namespace SimpleGame7
+} // namespace SpaceProx
 
-using namespace SimpleGame7;
+using namespace SpaceProx;
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int showCommand)
 {
     WNDCLASSEXW windowClass{};
@@ -957,23 +945,4 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int showCommand)
 
     ReleaseD3D();
     return static_cast<int>(message.wParam);
-}
-
-// Export the address of the non-virtual GetDamageTaken so GameHook7 can
-// inline / detour hook it. (In a real game you would pattern-scan for it.)
-//
-// GetDamageTaken is a NON-VIRTUAL member function. In the MSVC x64 ABI a
-// member-function pointer for a single-inheritance class is the same size as a
-// plain function pointer and holds the raw function address, so we can recover
-// it byte-for-byte. We use memcpy (not a union) so the conversion is well
-// defined, and a static_assert guards against a future ABI change.
-extern "C" __declspec(dllexport) void* GetDamageTakenAddress()
-{
-    typedef int (SimpleGame7::Player::*Fn)(int);
-    static_assert(sizeof(Fn) == sizeof(void*),
-        "MSVC x64 single-inheritance member function pointer must fit in a void*");
-    Fn fn = &SimpleGame7::Player::GetDamageTaken;
-    void* address = nullptr;
-    std::memcpy(&address, &fn, sizeof(address));
-    return address;
 }
