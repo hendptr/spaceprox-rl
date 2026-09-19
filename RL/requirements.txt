@@ -1,0 +1,9 @@
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch
+torchvision
+stable-baselines3[extra]
+gymnasium
+opencv-python
+pywin32
+matplotlib
+
